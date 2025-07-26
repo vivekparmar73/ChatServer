@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Go WebSocket Chat</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h2 {
+      color: #075e54;
+      margin: 20px 0 10px;
+    }
+
+    .chat-container {
+      background: #ffffff;
+      width: 400px;
+      max-width: 90%;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      margin: 10px 0 5px;
+      font-weight: bold;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    #chat {
+      height: 300px;
+      overflow-y: auto;
+      background: #e5ddd5;
+      padding: 10px;
+      margin-top: 15px;
+      border-radius: 10px;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+
+    .chat-message {
+      background-color: #dcf8c6;
+      border-radius: 7px;
+      padding: 6px 10px;
+      margin: 4px 0;
+      max-width: 80%;
+      word-wrap: break-word;
+    }
+
+    .chat-incoming {
+      background-color: #fff;
+      align-self: flex-start;
+    }
+
+    .chat-outgoing {
+      background-color: #dcf8c6;
+      align-self: flex-end;
+    }
+
+    button {
+      margin-top: 10px;
+      margin-right: 5px;
+      padding: 8px 12px;
+      border: none;
+      background-color: #25d366;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #1ebea5;
+    }
+  </style>
+</head>
+<body>
+  <h2>🟢 Go WebSocket Chat</h2>
+
+  <div class="chat-container">
+    <label>Username: <input type="text" id="username" /></label>
+    <label>To: <input type="text" id="to" /></label>
+    <label>Message: <input type="text" id="message" /></label>
+    <button onclick="connect()">Connect</button>
+    <button onclick="sendMessage()">Send</button>
+    <div id="chat"></div>
+  </div>
+
+  <script>
+    let ws;
+    let selfUser;
+
+    function connect() {
+      selfUser = document.getElementById("username").value.trim();
+      if (!selfUser) {
+        alert("Please enter a username.");
+        return;
+      }
+
+      ws = new WebSocket("ws://localhost:8080/ws");
+
+      ws.onopen = function () {
+        ws.send(selfUser);
+        appendChat("Connected as " + selfUser, "system");
+      };
+
+      ws.onmessage = function (event) {
+        const isSelf = event.data.startsWith(`[${selfUser}]`);
+        appendChat(event.data, isSelf ? "outgoing" : "incoming");
+      };
+
+      ws.onerror = function (err) {
+        appendChat("Error: " + err.message, "system");
+      };
+
+      ws.onclose = function () {
+        appendChat("Disconnected", "system");
+      };
+    }
+
+    function sendMessage() {
+      const to = document.getElementById("to").value.trim();
+      const msg = document.getElementById("message").value.trim();
+
+      if (!to || !msg) {
+        alert("Please enter recipient and message.");
+        return;
+      }
+
+      ws.send(`${to}|${msg}`);
+      appendChat(`[${selfUser}]: ${msg}`, "outgoing");
+      document.getElementById("message").value = "";
+    }
+
+    function appendChat(text, type) {
+      const chatBox = document.getElementById("chat");
+      const msgDiv = document.createElement("div");
+
+      msgDiv.className = `chat-message ${
+        type === "outgoing" ? "chat-outgoing" : type === "incoming" ? "chat-incoming" : ""
+      }`;
+      msgDiv.textContent = text;
+      chatBox.appendChild(msgDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  </script>
+</body>
+</html>
