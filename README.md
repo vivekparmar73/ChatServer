@@ -1,4 +1,5 @@
-#💬 Go WebSocket Chat App
+# 💬 Go WebSocket Chat App
+
 A simple WebSocket-based chat application using Go (Gin framework) and HTML/JavaScript. It supports real-time one-to-one messaging between users in different browser tabs or windows.
 
 ✅ Inspired by WhatsApp — built with clean UI, message delivery support, and lightweight real-time communication.
